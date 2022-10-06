@@ -2,22 +2,24 @@
 from socket import socket
 from threading import Thread
 
-def main(conn):
+def main(conn,addr):
     while True:
         data = conn.recv(1024)
         if data == b'/q':
             print(f"Close connection: {addr}")
             break 
         elif data:
-            print(data)
+            print('Client:',data.decode('utf-8'))
 
-def send_(conn):
+def send_(con):
     while True:
         a = input()
         if a == '/q':
             print(f"Close connection")
+            con.send(a.encode('utf-8'))
+            con.close()  
             break
-        conn.send(a.encode('utf-8'))  
+        con.send(a.encode('utf-8'))  
 
 
 def start_test_client():
@@ -30,6 +32,10 @@ def start_test_client():
 		if a == '/q':
 			break
 		data = sock.recv(1024)
+		if data == b'/q':
+			sock.close()
+			break
+		print('Server:',data.decode('utf-8'))
 
 	sock.close()
 
@@ -43,7 +49,7 @@ def start_test_server():
 	sock.listen(1)
 	conn, addr = sock.accept()
 	print(f'Connect: {addr}')
-	t1 = Thread(target=main, args=(conn,))
+	t1 = Thread(target=main, args=(conn,addr))
 	t2 = Thread(target=send_, args=(conn,))
 	t1.start()
 	t2.start()
